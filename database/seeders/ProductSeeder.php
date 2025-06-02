@@ -1,30 +1,30 @@
 <?php
 
 namespace Database\Seeders;
-
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use Illuminate\Database\Seeder;
 use App\Models\Product;
-use App\Models\ProductImage;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class ProductSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
-   public function run(): void
-{
-    Storage::disk('public')->makeDirectory('products');
+    public function run()
+    {
+        Storage::disk('public')->makeDirectory('products');
 
-    Product::factory(10)->create()->each(function ($product) {
-        // Add 3 fake images per product
-        for ($i = 0; $i < 3; $i++) {
-            $fakeImage = fake()->image(storage_path('app/public/products'), 640, 480, null, false);
-            $product->images()->create([
-                'image_path' => 'products/' . $fakeImage
-            ]);
-        }
-    });
-}
+        Product::factory(5)->create()->each(function ($product) {
+            for ($i = 1; $i <= 3; $i++) {
+                $imageUrl = "https://picsum.photos/640/480?random=" . rand(1, 10000);
+                $imageContents = file_get_contents($imageUrl);
+
+                $imageName = 'products/' . uniqid() . '.jpg';
+
+                Storage::disk('public')->put($imageName, $imageContents);
+
+                $product->images()->create([
+                    'image_path' => $imageName
+                ]);
+            }
+        });
+    }
 }

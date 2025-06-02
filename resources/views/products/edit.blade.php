@@ -38,7 +38,7 @@
 
         <div class="mb-3">
             <label class="form-label">Existing Images:</label>
-            <div class="row">
+            <div class="row" id="image-gallery">
                 @foreach ($product->images as $image)
                     <div class="col-md-3">
                         <div class="card mb-2">
@@ -72,25 +72,76 @@
     <input type="file" id="ajax-image" class="form-control mb-2" accept="image/jpeg,image/png,image/webp">
     <div id="ajax-upload-status" class="text-success mb-2"></div>
 
-    <script>
-        document.getElementById('ajax-image').addEventListener('change', function () {
-            let file = this.files[0];
-            if (!file) return;
+    <h5 class="mt-4">Or Drag & Drop Upload</h5>
+    <form action="{{ route('products.images.upload', $product) }}"
+          class="dropzone border border-2 p-3"
+          id="dropzoneForm">
+        @csrf
+    </form>
+@endsection
 
-            let formData = new FormData();
-            formData.append('image', file);
-            formData.append('_token', '{{ csrf_token() }}');
+@section('scripts')
+<script>
+    // Handle AJAX upload
+    document.getElementById('ajax-image').addEventListener('change', function () {
+        let file = this.files[0];
+        if (!file) return;
 
-            fetch('{{ route('products.images.upload', $product) }}', {
-                method: 'POST',
-                body: formData
-            }).then(res => res.json())
-              .then(data => {
-                  document.getElementById('ajax-upload-status').innerText = data.message;
-              })
-              .catch(err => {
-                  document.getElementById('ajax-upload-status').innerText = 'Upload failed.';
-              });
-        });
-    </script>
+        let formData = new FormData();
+        formData.append('image', file);
+        formData.append('_token', '{{ csrf_token() }}');
+
+        fetch('{{ route('products.images.upload', $product) }}', {
+            method: 'POST',
+            body: formData
+        }).then(res => res.json())
+          .then(data => {
+              document.getElementById('ajax-upload-status').innerText = data.message;
+              if (data.image_url && data.image_id) {
+                  addImageToGallery(data.image_url, data.image_id);
+              }
+          })
+          .catch(err => {
+              document.getElementById('ajax-upload-status').innerText = 'Upload failed.';
+          });
+    });
+
+    // Dropzone config
+    Dropzone.options.dropzoneForm = {
+        paramName: 'image',
+        maxFilesize: 2, // MB
+        acceptedFiles: 'image/jpeg,image/png,image/webp',
+        headers: {
+            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+        },
+        success: function (file, response) {
+            alert('Image uploaded successfully!');
+            if (response.image_url && response.image_id) {
+                addImageToGallery(response.image_url, response.image_id);
+            }
+        },
+        error: function (file, response) {
+            console.error('Upload failed:', response);
+            alert('Image upload failed.');
+        }
+    };
+
+    // Add image preview to gallery
+    function addImageToGallery(url, id) {
+        const col = document.createElement('div');
+        col.className = 'col-md-3';
+        col.innerHTML = `
+            <div class="card mb-2">
+                <img src="${url}" class="card-img-top" style="height: 100px; object-fit: cover;">
+                <div class="card-body text-center">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="remove_images[]" value="${id}" id="remove-${id}">
+                        <label class="form-check-label" for="remove-${id}">Remove</label>
+                    </div>
+                </div>
+            </div>
+        `;
+        document.getElementById('image-gallery').prepend(col);
+    }
+</script>
 @endsection
