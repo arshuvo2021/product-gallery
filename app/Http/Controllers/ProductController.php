@@ -116,5 +116,19 @@ class ProductController extends Controller
         
         return redirect()->route('products.index')->with('success', 'Product deleted successfully.');
     }
-    
+    public function uploadImage(Request $request, Product $product)
+{
+    $request->validate([
+        'image' => 'required|image|mimes:jpeg,png,webp|max:2048',
+    ]);
+
+    $path = $request->file('image')->store('products', 'public');
+
+    $product->images()->create([
+        'image_path' => $path
+    ]);
+
+    return response()->json(['message' => 'Image uploaded successfully.', 'image_path' => asset('storage/' . $path)]);
+}
+
 }
