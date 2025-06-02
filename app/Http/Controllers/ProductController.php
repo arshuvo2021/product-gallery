@@ -86,6 +86,11 @@ class ProductController extends Controller
 
     // Handle image removals
     if ($request->remove_images) {
+        $remainingImages = $product->images()->count() - count($request->remove_images);
+        if ($remainingImages < 3) {
+            return back()->withErrors(['images' => 'Product must have at least 3 images.']);
+        }
+
         foreach ($request->remove_images as $imageId) {
             $image = $product->images()->find($imageId);
             if ($image) {
@@ -101,7 +106,15 @@ class ProductController extends Controller
 
     public function destroy(Product $product)
     {
-        // Logic coming in Step 3
+        // Delete all associated images from storage
+        foreach ($product->images as $image) {
+            Storage::disk('public')->delete($image->image_path);
+        }
+        
+        // Delete the product (this will cascade delete the images from DB)
+        $product->delete();
+        
+        return redirect()->route('products.index')->with('success', 'Product deleted successfully.');
     }
     
 }
