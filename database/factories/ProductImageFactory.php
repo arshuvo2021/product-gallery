@@ -17,7 +17,7 @@ class ProductImageFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'image_path' => 'products/' . $this->faker->uuid . '.jpg',
         ];
     }
 }
