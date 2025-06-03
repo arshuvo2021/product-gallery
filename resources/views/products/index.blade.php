@@ -1,8 +1,13 @@
 @extends('layouts.app')
 
 @section('content')
-<h1>All Products</h1>
-<a href="{{ route('products.create') }}" class="btn btn-primary mb-3">Add Product</a>
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0">Product Gallery</h1>
+    <a href="{{ route('products.create') }}" class="btn btn-primary">
+        <i class="bi bi-plus-lg me-1"></i>Add New Product
+    </a>
+</div>
+
 <div class="row">
     @foreach ($products as $product)
         <div class="col-md-4">
